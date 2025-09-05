@@ -44,7 +44,7 @@ with col3:
 st.header("3. Utility Tariff Inputs")
 col1, col2 = st.columns(2)
 with col1:
-    import_rate = st.number_input("Import rate (£/kWh)", min_value=0.1, value=st.session_state.get("import_rate", 0.48),
+    import_rate = st.number_input("Import rate (£/kWh)", min_value=0.1, value=st.session_state.get("import_rate", 0.25),
                                   step=0.01)
 with col2:
     export_rate = st.number_input("Export rate (£/kWh)", min_value=0.00,
@@ -60,9 +60,9 @@ with col1:
     o_and_m_rate = st.number_input("O&M Cost (% of Capex per year)",
                                    value=st.session_state.get("o_and_m_rate", 1.0)) / 100
 with col2:
-    apply_degradation = st.checkbox("Apply Degradation", value=st.session_state.get("apply_degradation", True))
+    apply_degradation = st.checkbox("Apply Degradation", value=st.session_state.get("apply_degradation", False))
     degradation_rate = st.number_input("Degradation per Year (%)",
-                                       value=st.session_state.get("degradation_rate", 0.7)) / 100
+                                       value=st.session_state.get("degradation_rate", 0.4)) / 100
     apply_battery_degradation = st.checkbox("Apply Battery Degradation",
                                             value=st.session_state.get("apply_battery_degradation", False))
     battery_degradation = st.number_input("Battery Degradation per Year(%)",
