@@ -46,6 +46,75 @@ if uploaded_params:
         st.session_state[k] = v
     st.sidebar.success("Inputs loaded from file!")
 
+with st.sidebar.expander("📖 Glossary & How-to", expanded=False):
+    st.markdown("""
+    ## ⚡ Key Terms
+    - **DC Size (kW)**: Nominal capacity of the PV array (DC side).
+    - **Base DC Size (kW)**: DC size assumed in the uploaded PV file. Used for scaling.
+    - **Inverter Capacity (kW)**: Maximum AC output the inverter can deliver.
+    - **Inverter Efficiency (%)**: Conversion efficiency from DC to AC.
+    - **Export Limit (kW)**: Maximum power that can be exported to the grid at any time.
+    - **Import Limit (kW)**: Maximum grid power allowed to be imported at any time.
+    - **Battery Capacity (kWh)**: Usable energy storage per battery unit.
+    - **Depth of Discharge (DoD, %)**: Maximum usable fraction of the battery (e.g. 95% DoD leaves 5% SOC reserve).
+    - **SOC (State of Charge, %)**: Real-time energy stored in the battery relative to usable capacity.
+    - **C-rate**: Defines the speed of charging/discharging relative to battery size (0.5C = full charge in 2 hours).
+    - **PCS (Power Conversion System)**: Converter handling battery ↔ AC bus flows.
+    - **PCS Efficiencies (%)**: Charge and discharge efficiencies applied to AC/DC conversion.
+
+    ## 🛠 How the Simulation Works
+    1. **Data Inputs**  
+       - Load profile (CSV): Time series of site demand (kWh).  
+       - PV output (CSV): Time series of PV production (kWh).  
+       - Both must align in time resolution.  
+       
+    2. **Scaling PV**  
+       - PV data is scaled from the base DC size in the file to the user-defined DC size.  
+       
+    3. **AC Bus Dispatch Priorities**  
+       - **Step 1:** PV to load (via inverter).  
+       - **Step 2:** Battery discharge to load (if load > PV).  
+       - **Step 3:** Import from grid (if still deficit).  
+       - **Step 4:** If PV surplus: charge battery (respecting PCS and C-rate).  
+       - **Step 5:** Remaining surplus → export (limited by export cap).  
+       - **Step 6:** Any further PV beyond export cap = Excess/curtailment.  
+       
+    4. **Losses Accounting**  
+       - **Inverter Losses:** DC → AC efficiency.  
+       - **Battery Losses:** Charging + discharging inefficiencies.  
+       - **PCS Losses:** Additional AC/DC conversion inefficiencies.  
+       - **Clipped Energy:** DC energy > inverter limit.  
+
+    ## 📊 Financial Model
+    - **Capex (£):** Based on DC size (capex/kW) + battery units.  
+    - **O&M Costs (%):** Annual cost as % of Capex.  
+    - **Degradation:** Optional PV degradation per year.  
+    - **Tariff Escalation:** Import/export tariff growth per year.  
+    - **Outputs:**  
+      - Annual bill savings  
+      - Export income  
+      - O&M costs  
+      - Cumulative cash flow  
+      - IRR, ROI, Payback, LCOE  
+
+    ## 📈 Outputs to Check
+    - **Monthly Summary Table:** Energy balances by month.  
+    - **Annual Summary (Metrics):** Renewable fraction, export %, losses, battery utilization, cycles.  
+    - **Charts:**  
+      - Load profile (average/peak).  
+      - Battery SOC and flows.  
+      - Energy flows over time.  
+      - Monthly energy balance.  
+
+    ## 💡 Tips
+    - Ensure time steps in **Load** and **PV files** match (hourly, half-hourly, etc.).  
+    - Use realistic C-rates (0.5C → standard lithium-ion).  
+    - Export/import limits mimic grid constraints.  
+    - Excess energy highlights potential clipping or curtailment.  
+    - For sensitivity studies, use **Batch Simulation** to test multiple system sizes.  
+    """)
+
+
 # --- Upload Section ---
 st.header("1. Upload Input Data")
 col1, col2 = st.columns(2)
