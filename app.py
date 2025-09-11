@@ -121,6 +121,44 @@ with st.expander("🔋 Battery + PCS Settings"):
     pcs_eff_discharge = st.number_input("PCS Discharge Efficiency (%)",
                                         value=st.session_state.get("pcs_eff_discharge", 98.0)) / 100
 
+# --- Save Current Input Parameters ---
+if st.sidebar.button("📥 Save Inputs"):
+    input_params = {
+        "dc_size": dc_size,
+        "base_dc_size": base_dc_size,
+        "inverter_capacity": inverter_capacity,
+        "inverter_eff": inverter_eff*100,
+        "export_limit": export_limit,
+        "import_limit": import_limit,
+        "import_rate": import_rate,
+        "export_rate": export_rate,
+        "capex_per_kw": capex_per_kw,
+        "cost_of_battery": cost_of_battery,
+        "o_and_m_rate": o_and_m_rate*100,
+        "apply_degradation": apply_degradation,
+        "degradation_rate": degradation_rate*100,
+        "apply_battery_degradation": apply_battery_degardation,
+        "battery_degradation": battery_degradation*100,
+        "import_esc": import_esc*100,
+        "export_esc": export_esc*100,
+        "inflation": inflation*100,
+        "battery_qty": battery_qty,
+        "battery_capacity": battery_capacity,
+        "dod": dod*100,
+        "min_soc": min_soc*100,
+        "initial_soc": initial_soc*100,
+        "c_rate": c_rate,
+        "battery_eff": battery_eff*100,
+        "pcs_capacity":pcs_capacity,
+        "pcs_eff_charge":pcs_eff_charge*100,
+        "pcs_eff_discharge":pcs_eff_discharge
+        
+        
+    }
+
+    json_string = json.dumps(input_params, indent=2)
+    st.sidebar.download_button("⬇️ Download JSON", json_string, file_name="saved_inputs.json", mime="application/json")
+
 # --- Simulation Execution ---
 if load_file and pv_file:
     load_df = pd.read_csv(load_file)
