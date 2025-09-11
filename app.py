@@ -145,7 +145,7 @@ if st.sidebar.button("📥 Save Inputs"):
         "battery_eff": battery_eff*100,
         "pcs_capacity":pcs_capacity,
         "pcs_eff_charge":pcs_eff_charge*100,
-        "pcs_eff_discharge":pcs_eff_discharge
+        "pcs_eff_discharge":pcs_eff_discharge*100
         
         
     }
