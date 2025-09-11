@@ -90,10 +90,6 @@ with col2:
     apply_degradation = st.checkbox("Apply Degradation", value=st.session_state.get("apply_degradation", False))
     degradation_rate = st.number_input("Degradation per Year (%)",
                                        value=st.session_state.get("degradation_rate", 0.4)) / 100
-    apply_battery_degradation = st.checkbox("Apply Battery Degradation",
-                                            value=st.session_state.get("apply_battery_degradation", False))
-    battery_degradation = st.number_input("Battery Degradation per Year(%)",
-                                          value=st.session_state.get("battery_degradation", 0.5)) / 100
 with col3:
     import_esc = st.number_input("Import Tariff Escalation (%/year)",
                                  value=st.session_state.get("import_esc", 2.0)) / 100
@@ -137,8 +133,6 @@ if st.sidebar.button("📥 Save Inputs"):
         "o_and_m_rate": o_and_m_rate*100,
         "apply_degradation": apply_degradation,
         "degradation_rate": degradation_rate*100,
-        "apply_battery_degradation": apply_battery_degardation,
-        "battery_degradation": battery_degradation*100,
         "import_esc": import_esc*100,
         "export_esc": export_esc*100,
         "inflation": inflation*100,
