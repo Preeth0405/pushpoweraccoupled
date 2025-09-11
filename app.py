@@ -7,6 +7,33 @@ import plotly.express as px
 import json
 
 st.set_page_config(layout="wide")
+
+with st.sidebar:
+    st.image("image.png",width = 150)
+    st.header("🔒 Secure Login")
+
+    # Initialize session state
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    # Login logic
+    if not st.session_state.authenticated:
+        password = st.text_input("Enter password", type="password")
+        if password == "pushpower123":
+            st.session_state.authenticated = True
+            st.rerun()
+    else:
+        st.success("➜] Logged in")
+        if st.button("⏻ Logout"):
+            st.session_state.authenticated = False
+            st.rerun()
+
+# --- Access control ---
+if not st.session_state.authenticated:
+    st.warning("Please enter the correct password to access the app.")
+    st.stop()
+
+st.set_page_config(layout="wide")
 st.title("⚡ AC-Coupled Solar + Battery Simulator")
 
 # --- Upload/Download Input Parameters ---
