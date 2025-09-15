@@ -266,7 +266,8 @@ if load_file and pv_file:
         "Inverter Losses": [],
         "Clipped": [],
         "AC Bus Output": [],
-        "AC Bus Balance Error": []
+        "AC Bus Balance Error": [],
+        "Useful PV Production":[]
     }
 
     for i in df.index:
