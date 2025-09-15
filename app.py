@@ -269,110 +269,109 @@ if load_file and pv_file:
         "AC Bus Balance Error": []
     }
 
-    for i in df.index:
-        pv = df.at[i, "PV Production"]
-        load = df.at[i, "Load"]
+   for i in df.index:
+    pv = df.at[i, "PV Production"]
+    load = df.at[i, "Load"]
 
-        max_charge_pcs = pcs_capacity
-        max_discharge_pcs = pcs_capacity
+    max_charge_pcs = pcs_capacity
+    max_discharge_pcs = pcs_capacity
 
-        max_charge_batt = battery_capacity * battery_qty * c_rate
-        max_discharge_batt = battery_capacity * battery_qty * c_rate
+    max_charge_batt = battery_capacity * battery_qty * c_rate
+    max_discharge_batt = battery_capacity * battery_qty * c_rate
 
-        max_charge_possible = min(max_charge_pcs, max_charge_batt, usable_capacity - soc)
-        max_discharge_possible = min(max_discharge_pcs, max_discharge_batt, soc - usable_capacity * min_soc)
+    max_charge_possible = min(max_charge_pcs, max_charge_batt, usable_capacity - soc)
+    max_discharge_possible = min(max_discharge_pcs, max_discharge_batt, soc - usable_capacity * min_soc)
 
-        # --- Store SOC before step ---
-        results["SOC Before Step (%)"].append((soc / usable_capacity) * 100)
+    # --- Store SOC before step ---
+    results["SOC Before Step (%)"].append((soc / usable_capacity) * 100)
 
-        # --- PV → Inverter → AC Bus ---
-        e_inv = min(pv, inverter_capacity)
-        e_use_ac = e_inv * inverter_eff
-        inv_losses = e_inv - e_use_ac
+    # --- PV → Inverter → AC Bus ---
+    e_inv = min(pv, inverter_capacity)
+    e_use_ac = e_inv * inverter_eff
+    inv_losses = e_inv - e_use_ac
 
-        # --- AC Bus dispatch priorities ---
-        # Priority 1: PV AC to Load
-        pv_to_load_ac = min(e_use_ac, load)
-        remaining_load_ac = max(0, load - pv_to_load_ac)
+    # --- Priority 1: PV AC to Load ---
+    pv_to_load_ac = min(e_use_ac, load)
+    remaining_load_ac = max(0, load - pv_to_load_ac)
 
-        # --- Battery Discharge (raw → output) ---
-        pcs_remaining_capacity = pcs_capacity
+    # --- Battery Discharge (Battery DC → PCS → AC Bus) ---
+    max_dc_possible = min(max_discharge_batt, soc - usable_capacity * min_soc)
+    dc_from_batt = max(0, max_dc_possible)
 
-        # Step 1: Max raw discharge based on SOC and C-rate
-        max_raw_discharge = min(max_discharge_possible, soc - usable_capacity * min_soc)
-        max_raw_discharge = max(0, max_raw_discharge)
+    # Apply efficiencies
+    dc_after_batt = dc_from_batt * discharge_eff
+    ac_from_batt = min(remaining_load_ac, pcs_capacity, dc_after_batt * pcs_eff_discharge)
 
-        # Step 2: Convert to possible AC output
-        max_ac_output_from_battery = max_raw_discharge * pcs_eff_discharge * discharge_eff
+    # Back-calc actual DC drawn (for SOC update)
+    actual_dc_from_batt = ac_from_batt / (discharge_eff * pcs_eff_discharge) if ac_from_batt > 0 else 0
 
-        # Step 3: Actual needed AC output
-        battery_discharge_to_load_ac = min(remaining_load_ac, pcs_remaining_capacity, max_ac_output_from_battery)
-        pcs_remaining_capacity -= battery_discharge_to_load_ac
+    # Update SOC
+    soc -= actual_dc_from_batt
+    soc = max(soc, usable_capacity * min_soc)
 
-        # Step 4: Actual raw discharge used
-        useful_discharge = battery_discharge_to_load_ac
-        raw_discharge = useful_discharge / (pcs_eff_discharge * discharge_eff)
-        soc -= raw_discharge
-        soc = max(soc, usable_capacity * min_soc)
-        total_discharge += useful_discharge
+    # Track totals
+    total_discharge += ac_from_batt
 
-        # Track PCS Output (battery discharge)
-        pcs_out = useful_discharge / discharge_eff  # raw discharge DC → PCS AC output before eff loss
-        pcs_discharge_losses = pcs_out * (1 - pcs_eff_discharge)
+    # --- Battery Charge (AC Bus → PCS → Battery DC) ---
+    surplus_ac = max(0, e_use_ac - pv_to_load_ac)
+    pcs_in = min(surplus_ac, pcs_capacity, max_charge_possible)
 
-        # --- Battery Charge (via PCS) ---
-        surplus_ac = max(0, e_use_ac - pv_to_load_ac)
-        raw_charge = min(surplus_ac, pcs_remaining_capacity, max_charge_possible)
-        useful_charge = raw_charge * pcs_eff_charge * charge_eff
-        soc += useful_charge
+    # DC stored in battery
+    dc_stored = pcs_in * pcs_eff_charge * charge_eff
+    soc += dc_stored
+    soc = min(soc, usable_capacity)  # cap SOC at usable capacity
 
-        pcs_in = raw_charge  # raw AC energy used to charge battery
-        pcs_charge_losses = pcs_in * (1 - pcs_eff_charge)
+    # Remaining AC surplus goes to export
+    pv_after_load_charge = surplus_ac - pcs_in
 
-        pcs_losses = pcs_discharge_losses + pcs_charge_losses
-        battery_losses = (raw_charge - useful_charge) + (raw_discharge - useful_discharge)
+    # --- Import ---
+    import_energy = max(0, load - pv_to_load_ac - ac_from_batt)
 
-        # --- Import ---
-        import_energy = max(0, load - pv_to_load_ac - battery_discharge_to_load_ac)
+    # --- Export ---
+    export = min(pv_after_load_charge, export_limit)
 
-        # --- Export ---
-        pv_after_load_charge = max(0, e_use_ac - pv_to_load_ac - raw_charge)
-        export = min(pv_after_load_charge, export_limit)
+    # --- Excess ---
+    excess = max(0, pv_after_load_charge - export)
 
-        # --- Excess ---
-        excess = max(0, pv_after_load_charge - export)
+    # --- Clipped ---
+    clipped = max(0, pv - e_inv)
 
-        # --- Clipped ---
-        clipped = max(0, pv - e_inv)
+    # --- Loss calculations ---
+    battery_losses = (pcs_in - dc_stored) + (actual_dc_from_batt - ac_from_batt)
+    pcs_losses = (pcs_in * (1 - pcs_eff_charge)) + (dc_after_batt * (1 - pcs_eff_discharge))
 
-        # --- AC Bus Output calculation ---
-        # Now including raw_charge and excess → correct
-        ac_bus_output = pv_to_load_ac + battery_discharge_to_load_ac + export + raw_charge + excess
-        ac_bus_expected_output = e_use_ac + battery_discharge_to_load_ac
-        ac_bus_balance_error = ac_bus_expected_output - ac_bus_output
+    # --- AC Bus Output check ---
+    ac_bus_output = pv_to_load_ac + ac_from_batt + export + pcs_in + excess
+    ac_bus_expected_output = e_use_ac + ac_from_batt
+    ac_bus_balance_error = ac_bus_expected_output - ac_bus_output
 
-        # --- Store results ---
-        pv_load_dc = pv_to_load_ac / inverter_eff
+    # --- Store results ---
+    results["PV to Load"].append(pv_to_load_ac / inverter_eff)
+    results["PV to Load [AC]"].append(pv_to_load_ac)
 
-        results["PV to Load"].append(pv_load_dc)
-        results["PV to Load [AC]"].append(pv_to_load_ac)
-        results["Battery Charge [Useful]"].append(useful_charge)
-        results["Battery Charge [Raw AC Input]"].append(raw_charge)
-        results["Battery Discharge [Raw]"].append(raw_discharge)
-        results["Battery Discharge [Useful]"].append(useful_discharge)
-        results["Battery Discharge to Load [AC]"].append(battery_discharge_to_load_ac)
-        results["SOC (%)"].append((soc / usable_capacity) * 100)
-        results["Import"].append(min(import_energy, import_limit))
-        results["Export"].append(export)
-        results["Excess"].append(excess)
-        results["Battery Losses"].append(battery_losses)
-        results["PCS Losses"].append(pcs_losses)
-        results["PCS In (Charging)"].append(pcs_in)
-        results["PCS Out (Discharging)"].append(pcs_out)
-        results["Inverter Losses"].append(inv_losses)
-        results["Clipped"].append(clipped)
-        results["AC Bus Output"].append(ac_bus_output)
-        results["AC Bus Balance Error"].append(ac_bus_balance_error)
+    results["Battery Charge [Raw AC Input]"].append(pcs_in)
+    results["Battery Charge [Useful]"].append(dc_stored)
+
+    results["Battery Discharge [Raw]"].append(actual_dc_from_batt)
+    results["Battery Discharge [Useful]"].append(ac_from_batt)
+    results["Battery Discharge to Load [AC]"].append(ac_from_batt)
+
+    results["SOC (%)"].append((soc / usable_capacity) * 100)
+
+    results["Import"].append(min(import_energy, import_limit))
+    results["Export"].append(export)
+    results["Excess"].append(excess)
+
+    results["Battery Losses"].append(battery_losses)
+    results["PCS Losses"].append(pcs_losses)
+    results["PCS In (Charging)"].append(pcs_in)
+    results["PCS Out (Discharging)"].append(ac_from_batt)
+
+    results["Inverter Losses"].append(inv_losses)
+    results["Clipped"].append(clipped)
+    results["AC Bus Output"].append(ac_bus_output)
+    results["AC Bus Balance Error"].append(ac_bus_balance_error)
+
 
     # Attach results to dataframe
     for key in results:
