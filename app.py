@@ -530,10 +530,10 @@ if load_file and pv_file:
         row3[3].metric("🔻 Inverter Losses (kWh)", f"{total['Inverter Losses']:.2f}")
 
         row4 = st.columns(4)
-        row4[0].metric("🌞 Solar On-site (%)", f"{(total['PV to Load [AC]'] / total[' Useful PV Production']) * 100:.2f}%")
+        row4[0].metric("🌞 Solar On-site (%)", f"{(total['PV to Load [AC]'] / total['Useful PV Production']) * 100:.2f}%")
         row4[1].metric("🔋 Battery Use (%)",
-                       f"{(total['Battery Discharge [Useful]'] / total[' USeful PV Production']) * 100:.2f}%")
-        row4[2].metric("🗑️ Excess Energy (%)", f"{(total['Excess'] / total[' Useful PV Production']) * 100:.2f}%")
+                       f"{(total['Battery Discharge [Useful]'] / total['Useful PV Production']) * 100:.2f}%")
+        row4[2].metric("🗑️ Excess Energy (%)", f"{(total['Excess'] / total['Useful PV Production']) * 100:.2f}%")
         row4[3].metric("🔻 Inverter Losses (%)", f"{(total['Inverter Losses'] / total['Useful PV Production']) * 100:.2f}%")
 
         row5 = st.columns(4)
