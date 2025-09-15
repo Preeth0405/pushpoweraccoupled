@@ -399,8 +399,6 @@ if load_file and pv_file:
     initial_capex = (dc_size * capex_per_kw) + (battery_qty * cost_of_battery)
     years = list(range(26))
     degradation_factors = [(1 - degradation_rate) ** (y - 1) if apply_degradation and y > 0 else 1.0 for y in years]
-    battery_degradation_factor = [(1 - battery_degradation) ** (y - 1) if apply_battery_degradation and y > 0 else 0.0
-                                  for y in years]
     cashflow = []
     cumulative = -initial_capex
 
