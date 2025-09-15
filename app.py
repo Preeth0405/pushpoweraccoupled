@@ -269,7 +269,7 @@ if load_file and pv_file:
         "AC Bus Balance Error": []
     }
 
-    for i in df.index:
+for i in df.index:
     pv = df.at[i, "PV Production"]
     load = df.at[i, "Load"]
 
