@@ -506,7 +506,7 @@ if load_file and pv_file:
 
         renewable_fraction = ((total['PV to Load [AC]'] + total['Battery Discharge [Useful]']) / total['Load']) * 100
         import_to_load = (total['Import'] / total['Load']) * 100
-        export_to_grid = (total['Export'] / total[' Useful PV Production']) * 100
+        export_to_grid = (total['Export'] / total['Useful PV Production']) * 100
         battery_utilization = (total['Battery Discharge [Useful]'] / (usable_capacity * 365)) * 100
         battery_cycles = total_discharge / usable_capacity
 
@@ -518,7 +518,7 @@ if load_file and pv_file:
         row1[3].metric("📤 Exported (kWh)", f"{total['Export']:.2f}")
 
         row2 = st.columns(4)
-        row2[0].metric("☀️ Useful PV Production (kWh)", f"{total['USeful PV Production']:.2f}")
+        row2[0].metric("☀️ Useful PV Production (kWh)", f"{total['Useful PV Production']:.2f}")
         row2[1].metric("🔄 Solar + Battery On-site (%)", f"{renewable_fraction:.2f}%")
         row2[2].metric("⚡ Grid Import (%)", f"{import_to_load:.2f}%")
         row2[3].metric("📤 Exported (%)", f"{export_to_grid:.2f}%")
@@ -538,7 +538,7 @@ if load_file and pv_file:
 
         row5 = st.columns(4)
         row5[0].metric("🔻 Battery Losses (kWh)", f"{total['Battery Losses']:.2f}")
-        row5[1].metric("🔻 Battery Losses (%)", f"{(total['Battery Losses'] / total[' Useful PV Production']) * 100:.2f}%")
+        row5[1].metric("🔻 Battery Losses (%)", f"{(total['Battery Losses'] / total['Useful PV Production']) * 100:.2f}%")
         row5[2].metric("🔁 Battery Cycles", f"{battery_cycles:.2f}")
         row5[3].metric("🔋📈 Battery Utilization (%)", f"{battery_utilization:.2f}")
 
