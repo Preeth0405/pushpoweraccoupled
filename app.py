@@ -506,7 +506,7 @@ if load_file and pv_file:
 
         renewable_fraction = ((total['PV to Load [AC]'] + total['Battery Discharge [Useful]']) / total['Load']) * 100
         import_to_load = (total['Import'] / total['Load']) * 100
-        export_to_grid = (total['Export'] / total['PV Production']) * 100
+        export_to_grid = (total['Export'] / total[' Useful PV Production']) * 100
         battery_utilization = (total['Battery Discharge [Useful]'] / (usable_capacity * 365)) * 100
         battery_cycles = total_discharge / usable_capacity
 
@@ -530,15 +530,15 @@ if load_file and pv_file:
         row3[3].metric("🔻 Inverter Losses (kWh)", f"{total['Inverter Losses']:.2f}")
 
         row4 = st.columns(4)
-        row4[0].metric("🌞 Solar On-site (%)", f"{(total['PV to Load [AC]'] / total['PV Production']) * 100:.2f}%")
+        row4[0].metric("🌞 Solar On-site (%)", f"{(total['PV to Load [AC]'] / total[' Useful PV Production']) * 100:.2f}%")
         row4[1].metric("🔋 Battery Use (%)",
-                       f"{(total['Battery Discharge [Useful]'] / total['PV Production']) * 100:.2f}%")
-        row4[2].metric("🗑️ Excess Energy (%)", f"{(total['Excess'] / total['PV Production']) * 100:.2f}%")
-        row4[3].metric("🔻 Inverter Losses (%)", f"{(total['Inverter Losses'] / total['PV Production']) * 100:.2f}%")
+                       f"{(total['Battery Discharge [Useful]'] / total[' USeful PV Production']) * 100:.2f}%")
+        row4[2].metric("🗑️ Excess Energy (%)", f"{(total['Excess'] / total[' Useful PV Production']) * 100:.2f}%")
+        row4[3].metric("🔻 Inverter Losses (%)", f"{(total['Inverter Losses'] / total['Useful PV Production']) * 100:.2f}%")
 
         row5 = st.columns(4)
         row5[0].metric("🔻 Battery Losses (kWh)", f"{total['Battery Losses']:.2f}")
-        row5[1].metric("🔻 Battery Losses (%)", f"{(total['Battery Losses'] / total['PV Production']) * 100:.2f}%")
+        row5[1].metric("🔻 Battery Losses (%)", f"{(total['Battery Losses'] / total[' Useful PV Production']) * 100:.2f}%")
         row5[2].metric("🔁 Battery Cycles", f"{battery_cycles:.2f}")
         row5[3].metric("🔋📈 Battery Utilization (%)", f"{battery_utilization:.2f}")
 
