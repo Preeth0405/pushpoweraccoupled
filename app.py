@@ -354,7 +354,7 @@ if load_file and pv_file:
 
         # --- Store results ---
         pv_load_dc = pv_to_load_ac / inverter_eff
-        useful_energy = pv - clipped - excess
+        useful_energy = pv - clipped - inv_losses
 
         results["PV to Load"].append(pv_load_dc)
         results["PV to Load [AC]"].append(pv_to_load_ac)
