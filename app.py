@@ -353,6 +353,7 @@ if load_file and pv_file:
 
         # --- Store results ---
         pv_load_dc = pv_to_load_ac / inverter_eff
+        useful_energy = pv - clipped - excess
 
         results["PV to Load"].append(pv_load_dc)
         results["PV to Load [AC]"].append(pv_to_load_ac)
@@ -373,6 +374,7 @@ if load_file and pv_file:
         results["Clipped"].append(clipped)
         results["AC Bus Output"].append(ac_bus_output)
         results["AC Bus Balance Error"].append(ac_bus_balance_error)
+        results["Useful PV Production"].append(useful_energy)
 
     # Attach results to dataframe
     for key in results:
@@ -380,11 +382,11 @@ if load_file and pv_file:
 
     # --- Monthly Summary ---
     monthly = df.groupby("Month").agg({
-        "Load": "sum", "PV Production": "sum", "PV to Load": "sum",
+        "Load": "sum", "PV Production": "sum", "Useful PV Production":"sum", "PV to Load": "sum",
         "Battery Discharge [Useful]": "sum", "Import": "sum", "Export": "sum",
         "Excess": "sum", "Battery Losses": "sum", "Inverter Losses": "sum"
     }).rename(columns={
-        "Load": "Load", "PV Production": "Production", "PV to Load": "Solar On-site",
+        "Load": "Load", "PV Production": "Production", "Useful PV Production": "Useful PV Energy", "PV to Load": "Solar On-site",
         "Battery Discharge [Useful]": "Battery", "Import": "Grid", "Export": "Export",
         "Excess": "Excess", "Battery Losses": "Battery Losses", "Inverter Losses": "Inverter Losses"
     }).reset_index()
@@ -498,7 +500,7 @@ if load_file and pv_file:
 
     # --- Annual Summary (Metrics) ---
     with st.expander("📊 Annual Summary (Metrics)"):
-        total = df[["Load", "PV Production", "PV to Load [AC]", "Battery Discharge [Useful]", "Import", "Export", "Excess",
+        total = df[["Load", "Useful PV Production", "PV to Load [AC]", "Battery Discharge [Useful]", "Import", "Export", "Excess",
                     "Battery Losses", "Inverter Losses"]].sum()
 
         renewable_fraction = ((total['PV to Load [AC]'] + total['Battery Discharge [Useful]']) / total['Load']) * 100
@@ -515,7 +517,7 @@ if load_file and pv_file:
         row1[3].metric("📤 Exported (kWh)", f"{total['Export']:.2f}")
 
         row2 = st.columns(4)
-        row2[0].metric("☀️ PV Production (kWh)", f"{total['PV Production']:.2f}")
+        row2[0].metric("☀️ Useful PV Production (kWh)", f"{total['USeful PV Production']:.2f}")
         row2[1].metric("🔄 Solar + Battery On-site (%)", f"{renewable_fraction:.2f}%")
         row2[2].metric("⚡ Grid Import (%)", f"{import_to_load:.2f}%")
         row2[3].metric("📤 Exported (%)", f"{export_to_grid:.2f}%")
